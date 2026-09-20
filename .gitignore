@@ -1,0 +1,50 @@
+# ============================================
+# Unity 工程的 .gitignore
+# 关键：绝不能提交 Library/（几百 MB ~ 几 GB，GitHub 会拒收）
+# ============================================
+
+# ---- Unity 生成目录 ----
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Addressables 打包输出（如启用了 Remote 打包会生成）
+[Ss]erverData/
+
+# ---- Visual Studio / Rider ----
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# ---- Unity 崩溃与调试产物 ----
+sysinfo.txt
+crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# ---- 系统与编辑器 ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+*~
