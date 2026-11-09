@@ -38,7 +38,9 @@ public class PlayerController : MonoBehaviour
 
     public  bool isAttack;
 
-    //public static bool jumpCounter;
+    private bool jumpRequested;
+    private bool jumpConsumed;
+    private readonly ContactPoint2D[] groundContacts = new ContactPoint2D[8];
     private void Awake()
     {
         inputControl = new PlayerInputControl();
@@ -48,12 +50,8 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
 
         playerAnimation = GetComponent<PlayerAnimation>();
-        //跳跃
-        //if(jumpCounter)
-        //{
-            inputControl.Gameplay.Jump.started += Jump;
-        //    jumpCounter = false;
-        //}
+        //跳跃输入只登记请求，由物理帧统一处理。
+        inputControl.Gameplay.Jump.started += Jump;
 
         //攻击
         inputControl.Gameplay.Attack.started += PlayerAttack;
@@ -73,6 +71,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnDisable()
     {
+        jumpRequested = false;
         inputControl.Disable();
     }
     // Start is called before the first frame update
@@ -96,6 +95,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        physicsCheck.Check();
+        ProcessJump();
+
         if (!isHurt && !isAttack) 
             Move();
 
@@ -128,13 +130,49 @@ public class PlayerController : MonoBehaviour
     }
     private void Jump(InputAction.CallbackContext context)
     {
-        //Debug.Log("JUMP");
-        //if (physicsCheck.isGround)
-        //{
-            rb.AddForce(transform.up * jumpForce, ForceMode2D.Impulse);
-        //}
-        GetComponent<AudioDefination>()?.PlayAudioClip();
+        if (jumpRequested || jumpConsumed || isDead || isHurt || isAttack)
+            return;
 
+        physicsCheck.Check();
+        if (HasGroundSupport())
+            jumpRequested = true;
+    }
+
+    private void ProcessJump()
+    {
+        // 需要实际落地支撑，擦墙、贴顶或仍在上升时都不能恢复跳跃。
+        if (HasGroundSupport())
+            jumpConsumed = false;
+
+        if (!jumpRequested)
+            return;
+
+        jumpRequested = false;
+        if (jumpConsumed || isDead || isHurt || isAttack || !HasGroundSupport())
+            return;
+
+        jumpConsumed = true;
+        rb.AddForce(transform.up * jumpForce, ForceMode2D.Impulse);
+        GetComponent<AudioDefination>()?.PlayAudioClip();
+    }
+
+    private bool HasGroundSupport()
+    {
+        if (!physicsCheck.isGround || rb.velocity.y > 0f)
+            return false;
+
+        int count = coll.GetContacts(groundContacts);
+        for (int i = 0; i < count; i++)
+        {
+            ContactPoint2D contact = groundContacts[i];
+            Collider2D other = contact.collider == coll ? contact.otherCollider : contact.collider;
+            if (other != null &&
+                (physicsCheck.groundLayer.value & (1 << other.gameObject.layer)) != 0 &&
+                contact.normal.y >= 0.5f && contact.separation <= 0.01f)
+                return true;
+        }
+
+        return false;
     }
 
     private void PlayerAttack(InputAction.CallbackContext context)

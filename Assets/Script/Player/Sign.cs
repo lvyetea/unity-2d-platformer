@@ -5,8 +5,6 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XInput;
-using UnityEngine.iOS;
-using UnityEngine.tvOS;
 
 public class Sign : MonoBehaviour
 {
